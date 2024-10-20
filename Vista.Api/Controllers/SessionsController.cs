@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vista.Api.Data;
+using Vista.Api.Dtos;
 
 namespace Vista.Api.Controllers
 {
@@ -41,6 +42,28 @@ namespace Vista.Api.Controllers
             return session;
         }
 
+        // GET: api/ GetFreeSessions?date=yyyy-mm-dd&category=aa
+        // Gets a list of sessions that are not booked for a specified date and category
+        [HttpGet("GetFreeSessions")]
+        public async Task<ActionResult<IEnumerable<SessionFreeSlotDto>>> GetFreeSessions(DateTime date, string category)
+        {
+            var sessions = await _context.Sessions
+                .Where(s => s.SessionDate == date
+                    && s.BookingReference == null
+                    && s.Trainer.TrainerCategories != null
+                    && s.Trainer.TrainerCategories
+                        .Any(tr => tr.Category.CategoryCode == category))
+                .Select(s => new SessionFreeSlotDto
+                {
+                    SessionId = s.SessionId,
+                    SessionDate = s.SessionDate,
+                    TrainerId = s.TrainerId,
+                    TrainerName = s.Trainer.Name
+                }).ToListAsync();
+
+            return sessions;
+        }
+
         // PUT: api/Sessions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
@@ -72,10 +95,10 @@ namespace Vista.Api.Controllers
             return NoContent();
         }
 
-        // POST: api/Sessions
+        // POST: api/Sessions/AddSessionDate
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Session>> PostSession(Session session)
+        [HttpPost("AddSessionDate")]
+        public async Task<ActionResult<Session>> AddSessionDate(Session session)
         {
             _context.Sessions.Add(session);
             await _context.SaveChangesAsync();
