@@ -115,6 +115,45 @@ namespace Vista.Api.Controllers
             });
         }
 
+        // PUT: api/CancelSession?id=5&bookingReference=eb30cd7c-2fe5-4849-aaeb-e6769f81dedf
+        // Cancel session booking
+        [HttpPut("CancelSession")]
+        public async Task<IActionResult> CancelSession(int id, string bookingReference)
+        {
+            if (String.IsNullOrEmpty(bookingReference))
+            {
+                return BadRequest();
+            }
+
+            var session = await _context.Sessions
+                .Where(s => s.SessionId == id)
+                .FirstOrDefaultAsync();
+
+            if(session == null || session.BookingReference != bookingReference)
+            {
+                return NotFound();
+            }
+
+            //Clear booking reference
+            session.BookingReference = null;
+
+            _context.Entry(session).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+                //Log error
+                //return StatusCode(500)
+            }
+
+            //Confirm update has been completed
+            return Ok();
+        }
+
         // POST: api/Sessions/AddSessionDate
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("AddSessionDate")]
