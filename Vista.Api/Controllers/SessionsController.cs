@@ -50,15 +50,15 @@ namespace Vista.Api.Controllers
             var sessions = await _context.Sessions
                 .Where(s => s.SessionDate == date
                     && s.BookingReference == null
-                    && s.Trainer.TrainerCategories != null
+                    && s.Trainer!.TrainerCategories != null
                     && s.Trainer.TrainerCategories
-                        .Any(tr => tr.Category.CategoryCode == category))
+                        .Any(tr => tr.Category!.CategoryCode == category))
                 .Select(s => new SessionFreeSlotDto
                 {
                     SessionId = s.SessionId,
                     SessionDate = s.SessionDate,
                     TrainerId = s.TrainerId,
-                    TrainerName = s.Trainer.Name
+                    TrainerName = s.Trainer!.Name
                 }).ToListAsync();
 
             return sessions;
